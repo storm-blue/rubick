@@ -1,0 +1,13 @@
+# common rules
+DELETE(metadata.annotations.(kubectl.kubernetes.io/last-applied-configuration))
+DELETE(metadata.creationTimestamp)
+DELETE(metadata.resourceVersion)
+DELETE(metadata.uid)
+DELETE(status)
+
+# service rules
+IF VALUE_OF(kind)=="Service" THEN DELETE(spec.clusterIP)
+IF VALUE_OF(kind)=="Service" THEN DELETE(spec.clusterIPs)
+IF VALUE_OF(kind)=="Service" THEN SET(spec.ports[port=8080].port, 80)
+IF (VALUE_OF(kind)=="Service" && EXISTS(metadata.labels.(github.io/app))) THEN SET_WITH_VALUE_OF(metadata.name, metadata.labels.(github.io/app))
+IF NOT_EXISTS(metadata.labels.(github.io/app)) THEN SET_WITH_VALUE_OF(metadata.labels.(github.io/app), metadata.name)
