@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"gitlab.meetwhale.com/rubick/pkg/modifier/action"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/conditions"
+	"github.com/storm-blue/rubick/pkg/modifier/action"
+	"github.com/storm-blue/rubick/pkg/modifier/conditions"
 	"reflect"
 	"testing"
 )

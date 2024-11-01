@@ -1,4 +1,4 @@
-module gitlab.meetwhale.com/rubick
+module github.com/storm-blue/rubick
 
 go 1.19
 

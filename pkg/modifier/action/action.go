@@ -2,8 +2,8 @@ package action
 
 import (
 	"fmt"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/conditions"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/objects"
+	"github.com/storm-blue/rubick/pkg/modifier/conditions"
+	"github.com/storm-blue/rubick/pkg/modifier/objects"
 	"strings"
 )
 

@@ -3,7 +3,7 @@ package conditions
 import (
 	"fmt"
 	json "github.com/json-iterator/go"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/objects"
+	"github.com/storm-blue/rubick/pkg/modifier/objects"
 	"gopkg.in/yaml.v2"
 	"reflect"
 	"strconv"

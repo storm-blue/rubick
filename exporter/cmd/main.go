@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"gitlab.meetwhale.com/rubick/exporter"
-	"gitlab.meetwhale.com/rubick/pkg/common"
+	"github.com/storm-blue/rubick/exporter"
+	"github.com/storm-blue/rubick/pkg/common"
 	"io/fs"
 	"os"
 	"strings"

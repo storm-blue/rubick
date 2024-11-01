@@ -1,8 +1,8 @@
 package exporter
 
 import (
-	"gitlab.meetwhale.com/rubick/pkg/constants"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/objects"
+	"github.com/storm-blue/rubick/pkg/constants"
+	"github.com/storm-blue/rubick/pkg/modifier/objects"
 )
 
 func AllGetNamespaces(kubeconfig string) ([]string, error) {

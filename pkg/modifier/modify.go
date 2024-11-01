@@ -1,8 +1,8 @@
 package modifier
 
 import (
-	"gitlab.meetwhale.com/rubick/pkg/modifier/action"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/objects"
+	"github.com/storm-blue/rubick/pkg/modifier/action"
+	"github.com/storm-blue/rubick/pkg/modifier/objects"
 )
 
 func ModifyYAML(ctx action.Context, yamlStr string, actions []action.Action) (string, error) {

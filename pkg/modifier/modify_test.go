@@ -1,7 +1,7 @@
 package modifier
 
 import (
-	"gitlab.meetwhale.com/rubick/pkg/modifier/action"
+	"github.com/storm-blue/rubick/pkg/modifier/action"
 	"testing"
 )
 

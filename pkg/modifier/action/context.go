@@ -1,8 +1,8 @@
 package action
 
 import (
-	"gitlab.meetwhale.com/rubick/pkg/log"
-	"gitlab.meetwhale.com/rubick/pkg/modifier/objects"
+	"github.com/storm-blue/rubick/pkg/log"
+	"github.com/storm-blue/rubick/pkg/modifier/objects"
 )
 
 func NewContext(logKeys []string) Context {
