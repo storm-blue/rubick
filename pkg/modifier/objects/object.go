@@ -11,8 +11,10 @@ import (
 	"strings"
 )
 
+const metadataKey = ".__object.__metadata"
+
 func NewObject() StructuredObject {
-	return _object{}
+	return _object{metadataKey: _metadata{}}
 }
 
 func FromJSON(jsonStr string) (StructuredObject, error) {
@@ -20,7 +22,7 @@ func FromJSON(jsonStr string) (StructuredObject, error) {
 	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
 		return nil, err
 	}
-	return _object(result), nil
+	return FromMap(result), nil
 }
 
 func FromYAML(yamlStr string) (StructuredObject, error) {
@@ -28,7 +30,7 @@ func FromYAML(yamlStr string) (StructuredObject, error) {
 	if err := yaml.Unmarshal([]byte(yamlStr), result); err != nil {
 		return nil, err
 	}
-	return _object(result), nil
+	return FromMap(result), nil
 }
 
 func FromYAMLs(multiYaml string) ([]StructuredObject, error) {
@@ -42,13 +44,14 @@ func FromYAMLs(multiYaml string) ([]StructuredObject, error) {
 				break
 			}
 		}
-		result = append(result, _object(o))
+		result = append(result, FromMap(o))
 	}
 
 	return result, nil
 }
 
 func FromMap(m map[interface{}]interface{}) StructuredObject {
+	m[metadataKey] = _metadata{}
 	return _object(m)
 }
 
@@ -64,7 +67,18 @@ func ToYAMLs(_objects []StructuredObject) (string, error) {
 	buf := &bytes.Buffer{}
 	encoder := yaml.NewEncoder(buf)
 	for _, object := range _objects {
-		if err := encoder.Encode(object); err != nil {
+		o := object.(_object)
+		metadata := object.Metadata()
+
+		// remove metadata before marshal
+		delete(o, metadataKey)
+
+		err := encoder.Encode(o)
+
+		// restore metadata after marshal
+		o[metadataKey] = metadata
+
+		if err != nil {
 			return "", err
 		}
 	}
@@ -82,6 +96,7 @@ type StructuredObject interface {
 	GetFloat32(string) (float32, error)
 	GetFloat64(string) (float64, error)
 	GetString(string) (string, error)
+	Metadata() Metadata
 
 	Delete(string) error
 	Set(key string, value interface{}) error
@@ -96,6 +111,15 @@ type StructuredObject interface {
 }
 
 type _object map[interface{}]interface{}
+
+func (o _object) Metadata() Metadata {
+	metadata, ok := o[metadataKey]
+	if !ok {
+		metadata = _metadata{}
+		o[metadataKey] = metadata
+	}
+	return metadata.(Metadata)
+}
 
 func (o _object) Len() int {
 	return len(o)
@@ -317,7 +341,16 @@ func (o _object) GetString(s string) (string, error) {
 }
 
 func (o _object) ToYAML() (string, error) {
+	metadata := o.Metadata()
+
+	// remove metadata before marshal
+	delete(o, metadataKey)
+
 	yamlBytes, err := yaml.Marshal(o)
+
+	// restore metadata after marshal
+	o[metadataKey] = metadata
+
 	if err != nil {
 		return "", err
 	}
@@ -325,7 +358,15 @@ func (o _object) ToYAML() (string, error) {
 }
 
 func (o _object) ToJSON() (string, error) {
+	metadata := o.Metadata()
+
+	// remove metadata before marshal
+	delete(o, metadataKey)
 	bs, err := json.Marshal(o)
+
+	// restore metadata after marshal
+	o[metadataKey] = metadata
+
 	if err != nil {
 		return "", err
 	}
@@ -945,6 +986,9 @@ func ParseNextSegment(key string) (KeySegment, string, error) {
 				}
 				return KeySegment{key: keyPartOfHead, isArray: true, index: index}, headAndTailParts[1], nil
 			} else {
+				if !isValidateKeySegment(head) {
+					return KeySegment{}, "", fmt.Errorf("parse next key error: %v", key)
+				}
 				if len(headAndTailParts) == 1 {
 					return KeySegment{key: head}, "", nil
 				}

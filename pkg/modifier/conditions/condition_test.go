@@ -15,7 +15,7 @@ func TestNew(t *testing.T) {
 		{
 			name:      "TEST_SIMPLE_1",
 			condition: New().ValueOf("a").LesserThan(1),
-			want: &simpleCondition{
+			want: &valueOfCondition{
 				operator: LesserThan,
 				key:      "a",
 				value:    1,
@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 		{
 			name:      "TEST_SIMPLE_2",
 			condition: New().ValueOf("a").LesserThan("simple"),
-			want: &simpleCondition{
+			want: &valueOfCondition{
 				operator: LesserThan,
 				key:      "a",
 				value:    "simple",
@@ -34,7 +34,7 @@ func TestNew(t *testing.T) {
 			name:      "TEST_NOT",
 			condition: New().Not(New().ValueOf("a").LesserThan(1)),
 			want: &notCondition{
-				condition: &simpleCondition{operator: LesserThan, key: "a", value: 1},
+				condition: &valueOfCondition{operator: LesserThan, key: "a", value: 1},
 			},
 		},
 		{
@@ -44,11 +44,11 @@ func TestNew(t *testing.T) {
 				And(New().ValueOf("c").EqualTo(3)),
 			want: &CombinationCondition{
 				left: &CombinationCondition{
-					left:     &simpleCondition{operator: LesserThan, key: "a", value: 1},
-					right:    &simpleCondition{operator: GreaterThan, key: "b", value: 2},
+					left:     &valueOfCondition{operator: LesserThan, key: "a", value: 1},
+					right:    &valueOfCondition{operator: GreaterThan, key: "b", value: 2},
 					operator: And,
 				},
-				right:    &simpleCondition{operator: EqualTo, key: "c", value: 3},
+				right:    &valueOfCondition{operator: EqualTo, key: "c", value: 3},
 				operator: And,
 			},
 		},
@@ -56,7 +56,7 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.condition; !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
+				t.Errorf("_new() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -248,7 +248,7 @@ func Test_simpleCondition_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &simpleCondition{
+			s := &valueOfCondition{
 				operator: tt.fields.operator,
 				key:      tt.fields.key,
 				value:    tt.fields.value,

@@ -13,11 +13,11 @@ func ExecYAMLs(ctx action.Context, multiYaml string, scripts string) (string, er
 		return "", err
 	}
 
-	if err = ExecObjects(ctx, _objects, scripts); err != nil {
+	if __objects, err := ExecObjects(ctx, _objects, scripts); err != nil {
 		return "", err
+	} else {
+		return objects.ToYAMLs(__objects)
 	}
-
-	return objects.ToYAMLs(_objects)
 }
 
 func ExecYAML(ctx action.Context, yaml string, scripts string) (string, error) {
@@ -46,19 +46,24 @@ func ExecObject(ctx action.Context, object objects.StructuredObject, scripts str
 	return nil
 }
 
-func ExecObjects(ctx action.Context, _objects []objects.StructuredObject, scripts string) error {
+func ExecObjects(ctx action.Context, _objects []objects.StructuredObject, scripts string) ([]objects.StructuredObject, error) {
 	actions, err := ParseScripts(scripts)
 	if err != nil {
-		return err
+		return _objects, err
 	}
+
+	var result []objects.StructuredObject
 
 	for _, _object := range _objects {
 		for _, _action := range actions {
 			_action.DoAction(ctx, _object)
 		}
+		if !_object.Metadata().Removed() {
+			result = append(result, _object)
+		}
 	}
 
-	return nil
+	return result, nil
 }
 
 func ValidateScripts(scripts string) error {
@@ -76,7 +81,7 @@ func ParseScripts(scripts string) ([]action.Action, error) {
 			continue
 		}
 
-		if isComment(line) {
+		if IsComment(line) {
 			continue
 		}
 
@@ -89,6 +94,6 @@ func ParseScripts(scripts string) ([]action.Action, error) {
 	return actions, nil
 }
 
-func isComment(line string) bool {
+func IsComment(line string) bool {
 	return strings.HasPrefix(line, "#")
 }

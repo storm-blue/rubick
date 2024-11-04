@@ -173,11 +173,12 @@ IF NOT_EXISTS(metadata.labels.(github.io/app)) THEN SET_WITH_VALUE_OF(metadata.l
 				}
 			}
 
-			if err = scripts.ExecObjects(action.NewContext(nil), _objects, _scripts); err != nil {
+			__objects, err := scripts.ExecObjects(action.NewContext(nil), _objects, _scripts)
+			if err != nil {
 				return err
 			}
 
-			yaml, err := objects.ToYAMLs(_objects)
+			yaml, err := objects.ToYAMLs(__objects)
 			if err != nil {
 				return err
 			}

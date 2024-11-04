@@ -99,7 +99,7 @@ type CreateCondition_Start struct{}
 
 func (c CreateCondition_Start) ValueOf(key string) CreateCondition_ValueOf {
 	return CreateCondition_ValueOf{
-		condition: &simpleCondition{
+		condition: &valueOfCondition{
 			operator: None,
 			key:      key,
 		},
@@ -118,8 +118,17 @@ func (c CreateCondition_Start) Exists(key string) Condition {
 	}
 }
 
+func (c CreateCondition_Start) LengthOf(key string) CreateCondition_LengthOf {
+	return CreateCondition_LengthOf{
+		condition: &lengthOfCondition{
+			operator: None,
+			key:      key,
+		},
+	}
+}
+
 type CreateCondition_ValueOf struct {
-	condition *simpleCondition
+	condition *valueOfCondition
 }
 
 func (c CreateCondition_ValueOf) GreaterThan(value interface{}) Condition {
@@ -158,13 +167,53 @@ func (c CreateCondition_ValueOf) NotEqual(value interface{}) Condition {
 	return c.condition
 }
 
-type simpleCondition struct {
+type CreateCondition_LengthOf struct {
+	condition *lengthOfCondition
+}
+
+func (c CreateCondition_LengthOf) GreaterThan(value int) Condition {
+	c.condition.operator = GreaterThan
+	c.condition.value = value
+	return c.condition
+}
+
+func (c CreateCondition_LengthOf) GreaterThanOrEqual(value int) Condition {
+	c.condition.operator = GreaterThanOrEqual
+	c.condition.value = value
+	return c.condition
+}
+
+func (c CreateCondition_LengthOf) LesserThan(value int) Condition {
+	c.condition.operator = LesserThan
+	c.condition.value = value
+	return c.condition
+}
+
+func (c CreateCondition_LengthOf) LesserThanOrEqual(value int) Condition {
+	c.condition.operator = LesserThanOrEqual
+	c.condition.value = value
+	return c.condition
+}
+
+func (c CreateCondition_LengthOf) EqualTo(value int) Condition {
+	c.condition.operator = EqualTo
+	c.condition.value = value
+	return c.condition
+}
+
+func (c CreateCondition_LengthOf) NotEqual(value int) Condition {
+	c.condition.operator = NotEqual
+	c.condition.value = value
+	return c.condition
+}
+
+type valueOfCondition struct {
 	operator int
 	key      string
 	value    interface{}
 }
 
-func (s *simpleCondition) And(condition Condition) Condition {
+func (s *valueOfCondition) And(condition Condition) Condition {
 	return &CombinationCondition{
 		left:     s,
 		right:    condition,
@@ -172,7 +221,7 @@ func (s *simpleCondition) And(condition Condition) Condition {
 	}
 }
 
-func (s *simpleCondition) Or(condition Condition) Condition {
+func (s *valueOfCondition) Or(condition Condition) Condition {
 	return &CombinationCondition{
 		left:     s,
 		right:    condition,
@@ -180,7 +229,7 @@ func (s *simpleCondition) Or(condition Condition) Condition {
 	}
 }
 
-func (s *simpleCondition) Calculate(object objects.StructuredObject) (bool, error) {
+func (s *valueOfCondition) Calculate(object objects.StructuredObject) (bool, error) {
 	v, err := object.Get(s.key)
 	if err != nil {
 		return false, err
@@ -193,7 +242,7 @@ func (s *simpleCondition) Calculate(object objects.StructuredObject) (bool, erro
 	return calculate(s.operator, v, s.value)
 }
 
-func (s *simpleCondition) String() string {
+func (s *valueOfCondition) String() string {
 	operatorString := ""
 	switch s.operator {
 	case GreaterThan:
@@ -503,4 +552,70 @@ func (e *existsCondition) Calculate(object objects.StructuredObject) (bool, erro
 
 func (e *existsCondition) String() string {
 	return fmt.Sprintf("EXISTS(%v)", e.key)
+}
+
+type lengthOfCondition struct {
+	operator int
+	key      string
+	value    int
+}
+
+func (c *lengthOfCondition) And(condition Condition) Condition {
+	return &CombinationCondition{
+		left:     c,
+		right:    condition,
+		operator: And,
+	}
+}
+
+func (c *lengthOfCondition) Or(condition Condition) Condition {
+	return &CombinationCondition{
+		left:     c,
+		right:    condition,
+		operator: Or,
+	}
+}
+
+func (c *lengthOfCondition) Calculate(object objects.StructuredObject) (bool, error) {
+	v, err := object.Get(c.key)
+	if err != nil {
+		return false, err
+	}
+
+	if v == nil {
+		return false, nil
+	}
+
+	size := 0
+	switch v_ := v.(type) {
+	case []interface{}:
+		size = len(v_)
+	case map[interface{}]interface{}:
+		size = len(v_)
+	default:
+		return false, fmt.Errorf("calculate error: unsupported type: %v", reflect.TypeOf(v))
+	}
+
+	return calculateNumber(c.operator, float64(size), c.value)
+}
+
+func (c *lengthOfCondition) String() string {
+	operatorString := ""
+	switch c.operator {
+	case GreaterThan:
+		operatorString = ">"
+	case GreaterThanOrEqual:
+		operatorString = ">="
+	case LesserThan:
+		operatorString = "<"
+	case LesserThanOrEqual:
+		operatorString = "<="
+	case EqualTo:
+		operatorString = "=="
+	case NotEqual:
+		operatorString = "!="
+	default:
+	}
+
+	return fmt.Sprintf("%v %v %v", c.key, operatorString, c.value)
 }

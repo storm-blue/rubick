@@ -2,15 +2,19 @@ package keywords
 
 //goland:noinspection ALL
 const (
-	IF                = "IF"
-	THEN              = "THEN"
-	VALUE_OF          = "VALUE_OF"
-	EXISTS            = "EXISTS"
-	NOT_EXISTS        = "NOT_EXISTS"
-	DELETE            = "DELETE"
-	SET               = "SET"
-	REPLACE_PART      = "REPLACE_PART"
-	SET_WITH_VALUE_OF = "SET_WITH_VALUE_OF"
+	IF           = "IF"
+	THEN         = "THEN"
+	VALUE_OF     = "VALUE_OF"
+	LENGTH_OF    = "LENGTH_OF"
+	EXISTS       = "EXISTS"
+	NOT_EXISTS   = "NOT_EXISTS"
+	DELETE       = "DELETE"
+	SET          = "SET"
+	REPLACE_PART = "REPLACE_PART"
+	TRIM_PREFIX  = "TRIM_PREFIX"
+	TRIM_SUFFIX  = "TRIM_SUFFIX"
+	PRINT        = "PRINT"
+	REMOVE       = "REMOVE"
 
 	// operators
 	OPERATOR_EQ = "=="

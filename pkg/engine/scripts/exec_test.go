@@ -67,7 +67,7 @@ DELETE(status)
 IF VALUE_OF(kind)=="Service" THEN DELETE(spec.clusterIP)
 IF VALUE_OF(kind)=="Service" THEN DELETE(spec.clusterIPs)
 IF VALUE_OF(kind)=="Service" THEN SET(spec.ports[port=8080].port, 80)
-IF VALUE_OF(kind)=="Service" THEN SET_WITH_VALUE_OF(metadata.name, metadata.labels.(github.io/app-name))
+IF VALUE_OF(kind)=="Service" THEN SET(metadata.name, VALUE_OF(metadata.labels.(github.io/app-name)))
 `,
 			},
 			want: `apiVersion: v1

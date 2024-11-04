@@ -145,7 +145,7 @@ func TestFromYAML(t *testing.T) {
 			yamlStr: `---
 a: 1
 `,
-			want:    _object{"a": 1},
+			want:    _object{"a": 1, metadataKey: _metadata{}},
 			wantErr: false,
 		},
 		{
@@ -153,7 +153,7 @@ a: 1
 			yamlStr: `---
 a: 1.2
 `,
-			want:    _object{"a": 1.2},
+			want:    _object{"a": 1.2, metadataKey: _metadata{}},
 			wantErr: false,
 		},
 		{
@@ -161,7 +161,7 @@ a: 1.2
 			yamlStr: `---
 a: true
 `,
-			want:    _object{"a": true},
+			want:    _object{"a": true, metadataKey: _metadata{}},
 			wantErr: false,
 		},
 		{
@@ -169,7 +169,7 @@ a: true
 			yamlStr: `---
 a: 9223372036854775807
 `,
-			want:    _object{"a": 9223372036854775807},
+			want:    _object{"a": 9223372036854775807, metadataKey: _metadata{}},
 			wantErr: false,
 		},
 	}
@@ -251,9 +251,9 @@ a: b
 c: d
 `,
 			want: []StructuredObject{
-				_object{},
-				_object{"a": "b"},
-				_object{"c": "d"},
+				_object{metadataKey: _metadata{}},
+				_object{"a": "b", metadataKey: _metadata{}},
+				_object{"c": "d", metadataKey: _metadata{}},
 			},
 			wantErr: false,
 		},

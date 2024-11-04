@@ -2,9 +2,7 @@ package action
 
 import (
 	"fmt"
-	"github.com/storm-blue/rubick/pkg/modifier/conditions"
 	"github.com/storm-blue/rubick/pkg/modifier/objects"
-	"strings"
 )
 
 type Action interface {
@@ -12,132 +10,115 @@ type Action interface {
 	String() string
 }
 
+type Valuable interface {
+	getValue(object objects.StructuredObject) (interface{}, error)
+}
+
+func Original(v interface{}) Valuable {
+	return &originalValue{value: v}
+}
+
+type originalValue struct {
+	value interface{}
+}
+
+func (o *originalValue) getValue(_ objects.StructuredObject) (interface{}, error) {
+	return o.value, nil
+}
+
+func ValueOf(key string) Valuable {
+	return &valueOfKeyValue{key: key}
+}
+
+type valueOfKeyValue struct {
+	key string
+}
+
+func (o *valueOfKeyValue) getValue(object objects.StructuredObject) (interface{}, error) {
+	return object.Get(o.key)
+}
+
 // -- delete action --
 
 func NewDeleteAction(key string) Action {
-	return &DeleteAction{Key: key}
+	return &deleteAction{key: key}
 }
 
-type DeleteAction struct {
-	Key string
+type deleteAction struct {
+	key string
 }
 
-func (d *DeleteAction) DoAction(context Context, object objects.StructuredObject) {
-	if err := object.Delete(d.Key); err != nil {
+func (d *deleteAction) DoAction(context Context, object objects.StructuredObject) {
+	if err := object.Delete(d.key); err != nil {
 		context.Log(object, d, err)
 	}
 }
 
-func (d *DeleteAction) String() string {
-	return fmt.Sprintf("DeleteAction: key=%v", d.Key)
+func (d *deleteAction) String() string {
+	return fmt.Sprintf("DeleteAction: key=%v", d.key)
 }
 
 // -- set action --
 
-func NewSetAction(key string, value interface{}) Action {
-	return &SetAction{Key: key, Value: value}
+func NewSetAction(key string, value Valuable) Action {
+	return &setAction{key: key, value: value}
 }
 
-type SetAction struct {
-	Key   string
-	Value interface{}
+type setAction struct {
+	key   string
+	value Valuable
 }
 
-func (s *SetAction) DoAction(context Context, object objects.StructuredObject) {
-	if err := object.Set(s.Key, s.Value); err != nil {
-		context.Log(object, s, err)
-	}
-}
-
-func (s *SetAction) String() string {
-	return fmt.Sprintf("DeleteAction: key=%v, value=%v", s.Key, s.Value)
-}
-
-// -- set with value of action --
-
-func NewSetWithValueOfAction(key, valueOf string) Action {
-	return &SetWithValueOfAction{Key: key, ValueOf: valueOf}
-}
-
-type SetWithValueOfAction struct {
-	Key     string
-	ValueOf string
-}
-
-func (s *SetWithValueOfAction) DoAction(context Context, object objects.StructuredObject) {
-	v, err := object.Get(s.ValueOf)
+func (s *setAction) DoAction(context Context, object objects.StructuredObject) {
+	v, err := s.value.getValue(object)
 	if err != nil {
 		context.Log(object, s, err)
 		return
 	}
 
-	if v != nil {
-		if err = object.Set(s.Key, v); err != nil {
-			context.Log(object, s, err)
-		}
+	if err := object.Set(s.key, v); err != nil {
+		context.Log(object, s, err)
 	}
 }
 
-func (s *SetWithValueOfAction) String() string {
-	return fmt.Sprintf("SetWithValueOfAction: key=%v, valueOf=%v", s.Key, s.ValueOf)
+func (s *setAction) String() string {
+	return fmt.Sprintf("SetAction: key=%v, value=%v", s.key, s.value)
 }
 
-// -- replace part action --
+// -- print action --
 
-func NewReplacePartAction(key, old, new string) Action {
-	return &ReplacePartAction{Key: key, Old: old, New: new}
+func NewPrintAction(key string) Action {
+	return &printAction{key: key}
 }
 
-type ReplacePartAction struct {
-	Key string
-	Old string
-	New string
+type printAction struct {
+	key string
 }
 
-func (r *ReplacePartAction) DoAction(context Context, object objects.StructuredObject) {
-	v, err := object.GetString(r.Key)
-	if err != nil {
-		context.Log(object, r, err)
-		return
-	}
-
-	v_ := strings.ReplaceAll(v, r.Old, r.New)
-
-	if err := object.Set(r.Key, v_); err != nil {
-		context.Log(object, r, err)
+func (s *printAction) DoAction(context Context, object objects.StructuredObject) {
+	if v, err := object.Get(s.key); err != nil {
+		context.Log(object, s, err)
+	} else {
+		fmt.Printf("%v: %v\n", s.key, v)
 	}
 }
 
-func (r *ReplacePartAction) String() string {
-	return fmt.Sprintf("ReplacePartAction: key=%v, Old=%v, New=%v", r.Key, r.Old, r.New)
+func (s *printAction) String() string {
+	return fmt.Sprintf("PrintAction: key=%v", s.key)
 }
 
-// -- condition action --
+// -- mark removed action --
 
-func NewConditionAction(condition conditions.Condition, action Action) Action {
-	return &ConditionAction{
-		condition: condition,
-		action:    action,
-	}
+func NewMarkRemovedAction() Action {
+	return &markRemovedAction{}
 }
 
-type ConditionAction struct {
-	condition conditions.Condition
-	action    Action
+type markRemovedAction struct{}
+
+func (s *markRemovedAction) DoAction(_ Context, object objects.StructuredObject) {
+	object.Metadata().MarkRemoved(true)
 }
 
-func (c *ConditionAction) DoAction(context Context, object objects.StructuredObject) {
-	r, err := c.condition.Calculate(object)
-	if err != nil {
-		context.Log(object, c, err)
-		return
-	}
-
-	if r {
-		c.action.DoAction(context, object)
-	}
-}
-
-func (c *ConditionAction) String() string {
-	return fmt.Sprintf("ConditionAction: condition=%v, action=%v", c.condition.String(), c.action.String())
+func (s *markRemovedAction) String() string {
+	return fmt.Sprintf("MarkRemovedAction")
 }

@@ -28,6 +28,10 @@ func ParseConfig(config string) (kubeconfig string, _scripts string, resourceMat
 			continue
 		}
 
+		if scripts.IsComment(line) {
+			continue
+		}
+
 		if isHead(line) {
 			head = parseHead(line)
 			if head != KubeconfigHead && head != ScriptsHead {
@@ -94,7 +98,7 @@ func isValidResourceTypeString(s string) bool {
 	return resourceTypeRegex.MatchString(s)
 }
 
-var pathRegex = regexp.MustCompile("^[a-zA-Z0-9_\\-/.]+$")
+var pathRegex = regexp.MustCompile("^[a-zA-Z0-9_\\-/.${}]+$")
 
 func isValidPath(path string) bool {
 	return pathRegex.MatchString(path)

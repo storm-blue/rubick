@@ -48,7 +48,7 @@ b: gala
     key3: mud
 `,
 			config: []action.Action{
-				action.NewSetAction("a.c[++].key1", "shut"),
+				action.NewSetAction("a.c[++].key1", action.Original("shut")),
 			},
 			want: `a:
   c:
@@ -68,8 +68,8 @@ b: gala
     key3: mud
 `,
 			config: []action.Action{
-				action.NewSetAction("a.c[0].key1", "shut"),
-				action.NewSetAction("a.c[0].key4", "card"),
+				action.NewSetAction("a.c[0].key1", action.Original("shut")),
+				action.NewSetAction("a.c[0].key4", action.Original("card")),
 			},
 			want: `a:
   c:
@@ -89,8 +89,8 @@ b: gala
     key3: mud
 `,
 			config: []action.Action{
-				action.NewSetAction("a.c[2].key1", "shut"),
-				action.NewSetAction("a.c[2].key4", "card"),
+				action.NewSetAction("a.c[2].key1", action.Original("shut")),
+				action.NewSetAction("a.c[2].key4", action.Original("card")),
 			},
 			want: `a:
   c:
@@ -109,8 +109,8 @@ b: gala
     key3: mud
 `,
 			config: []action.Action{
-				action.NewSetAction("a.c[1].key1", "shut"),
-				action.NewSetAction("a.c[1].key4[0].trouble.size", 36),
+				action.NewSetAction("a.c[1].key1", action.Original("shut")),
+				action.NewSetAction("a.c[1].key4[0].trouble.size", action.Original(36)),
 			},
 			want: `a:
   c:
@@ -133,8 +133,8 @@ b: gala
     key3: mud
 `,
 			config: []action.Action{
-				action.NewSetAction("a.c[++].key1", "shut"),
-				action.NewSetAction("a.c[1].key4[0].trouble.size", 36),
+				action.NewSetAction("a.c[++].key1", action.Original("shut")),
+				action.NewSetAction("a.c[1].key4[0].trouble.size", action.Original(36)),
 			},
 			want: `a:
   c:
@@ -247,7 +247,7 @@ b: gala
     key3: mud3
 `,
 			config: []action.Action{
-				action.NewSetAction("a.c[*].key3", "cat"),
+				action.NewSetAction("a.c[*].key3", action.Original("cat")),
 			},
 			want: `a:
   c:

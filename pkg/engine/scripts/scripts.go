@@ -12,10 +12,7 @@ import (
 )
 
 // ParseAction
-// IF VALUE_OF(a.b.c[0]) = 1 THEN DELETE(x.y.z)
-// IF VALUE_OF(a.b.c[0]) = 1 THEN SET(x.y.z, "shit")
-// IF VALUE_OF(a.b.c[0]) = 1 THEN REPLACE_PART(x.y.z, "shit","shit0")
-// IF VALUE_OF(a.b.c[0]) = 1 THEN SET(x.y.z, VALUE_OF(a.b.c))
+// IF ... THEN ...
 func ParseAction(expression string) (action.Action, error) {
 	expression = strings.TrimSpace(expression)
 	if expression == "" {
@@ -42,12 +39,9 @@ func ParseAction(expression string) (action.Action, error) {
 	}
 }
 
-// parsePureAction
-// DELETE(x.y.z)
-// SET(x.y.z, "shit")
-// REPLACE_PART(x.y.z, "shit","shit0")
-// SET(x.y.z, VALUE_OF(a.b.c))
-// SET_WITH_VALUE_OF(x.y.z, zy.c)
+// parsePureAction like:
+// DELETE(...)
+// SET(..., "...")
 func parsePureAction(expression string) (action.Action, error) {
 	method, args, err := splitPureActionExpression(expression)
 	if err != nil {
@@ -72,7 +66,11 @@ func parsePureAction(expression string) (action.Action, error) {
 		if !objects.IsValidKey(key) {
 			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.SET, expression)
 		}
-		return action.NewSetAction(key, parseToNumberIfPossible(args[1])), nil
+		value, err := preprocessArgument(args[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid '%s' expression: second parameter is invalid: %s", keywords.SET, expression)
+		}
+		return action.NewSetAction(key, value), nil
 	case keywords.REPLACE_PART:
 		if len(args) != 3 {
 			return nil, fmt.Errorf("invalid '%s' expression: number of parameters must be 3: %s", keywords.REPLACE_PART, expression)
@@ -82,21 +80,66 @@ func parsePureAction(expression string) (action.Action, error) {
 			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.REPLACE_PART, expression)
 		}
 		return action.NewReplacePartAction(key, unwrapQuotaIfNeeded(args[1]), unwrapQuotaIfNeeded(args[2])), nil
-	case keywords.SET_WITH_VALUE_OF:
+	case keywords.TRIM_PREFIX:
 		if len(args) != 2 {
-			return nil, fmt.Errorf("invalid '%s' expression: number of parameters must be 2: %s", keywords.SET_WITH_VALUE_OF, expression)
+			return nil, fmt.Errorf("invalid '%s' expression: number of parameters must be 2: %s", keywords.TRIM_PREFIX, expression)
 		}
-		key0 := unwrapQuotaIfNeeded(args[0])
-		if !objects.IsValidKey(key0) {
-			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.SET_WITH_VALUE_OF, expression)
+		key := unwrapQuotaIfNeeded(args[0])
+		if !objects.IsValidKey(key) {
+			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.TRIM_PREFIX, expression)
 		}
-		key1 := unwrapQuotaIfNeeded(args[1])
-		if !objects.IsValidKey(key1) {
-			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.SET_WITH_VALUE_OF, expression)
+		prefix, err := preprocessArgument(args[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid '%s' expression: second parameter is invalid: %s", keywords.TRIM_PREFIX, expression)
 		}
-		return action.NewSetWithValueOfAction(key0, key1), nil
+		return action.NewTrimPrefixAction(key, prefix), nil
+	case keywords.TRIM_SUFFIX:
+		if len(args) != 2 {
+			return nil, fmt.Errorf("invalid '%s' expression: number of parameters must be 2: %s", keywords.TRIM_SUFFIX, expression)
+		}
+		key := unwrapQuotaIfNeeded(args[0])
+		if !objects.IsValidKey(key) {
+			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.TRIM_SUFFIX, expression)
+		}
+		suffix, err := preprocessArgument(args[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid '%s' expression: second parameter is invalid: %s", keywords.TRIM_SUFFIX, expression)
+		}
+		return action.NewTrimSuffixAction(key, suffix), nil
+	case keywords.PRINT:
+		if len(args) != 1 {
+			return nil, fmt.Errorf("invalid '%s' expression: number of parameters must be 1: %s", keywords.PRINT, expression)
+		}
+		key := unwrapQuotaIfNeeded(args[0])
+		if !objects.IsValidKey(key) {
+			return nil, fmt.Errorf("invalid '%s' expression: key is invalid: %s", keywords.PRINT, expression)
+		}
+		return action.NewPrintAction(key), nil
+	case keywords.REMOVE:
+		if len(args) != 0 {
+			return nil, fmt.Errorf("invalid '%s' expression: number of parameters must be 0: %s", keywords.REMOVE, expression)
+		}
+		return action.NewMarkRemovedAction(), nil
 	default:
 		return nil, fmt.Errorf("invalid action: %s", expression)
+	}
+}
+
+func preprocessArgument(argument string) (action.Valuable, error) {
+	if strings.HasPrefix(argument, keywords.VALUE_OF+"(") {
+		if !strings.HasSuffix(argument, ")") {
+			return nil, fmt.Errorf("invalid argument: %s", argument)
+		}
+		key := strings.TrimSpace(argument[len(keywords.VALUE_OF)+1 : len(argument)-1])
+		key = unwrapQuotaIfNeeded(key)
+
+		if !objects.IsValidKey(key) {
+			return nil, fmt.Errorf("invalid argument: key is invalid: %s", argument)
+		}
+		return action.ValueOf(key), nil
+	} else {
+		v := parseToNumberIfPossible(argument)
+		return action.Original(v), nil
 	}
 }
 
@@ -138,6 +181,8 @@ func splitPureActionExpression(expression string) (method string, args []string,
 
 	method = expression[:i]
 	argsString := expression[i+1 : len(expression)-1]
+	argsString = strings.TrimSpace(argsString)
+
 	if argsString == "" {
 		return method, nil, nil
 	}
@@ -149,8 +194,8 @@ func splitPureActionExpression(expression string) (method string, args []string,
 	return method, args, nil
 }
 
-// parseCondition
-// (VALUE(a.b[2].c=="true"))&&(VALUE(x.y.z)>123)
+// parseCondition like:
+// (VALUE_OF(...) == "...")) && (VALUE_OF(...) > 0) || EXISTS(...)
 func parseCondition(expression string) (conditions.Condition, error) {
 	if expression == "" {
 		return nil, nil
@@ -215,7 +260,10 @@ func recursiveParseCondition(headCondition conditions.Condition, operator string
 
 }
 
-func splitValueOfSimpleConditionExpression(expression string) (left, right, operator string, err error) {
+// split express like:
+// VALUE_OF(...) == "..."
+// LENGTH_OF(...) >= "..."
+func splitRelationalSimpleConditionExpression(expression string) (left, right, operator string, err error) {
 	index := -1
 	for _, _operator := range keywords.RELATIONAL_OPERATORS {
 		index = strings.Index(expression, _operator)
@@ -225,7 +273,7 @@ func splitValueOfSimpleConditionExpression(expression string) (left, right, oper
 		}
 	}
 	if index == -1 {
-		return "", "", "", fmt.Errorf("invalid '%s' condition: relational operator not found: %s", keywords.VALUE_OF, expression)
+		return "", "", "", fmt.Errorf("invalid relational condition: relational operator not found: %s", expression)
 	}
 	return strings.TrimSpace(expression[:index]), strings.TrimSpace(expression[index+len(operator):]), operator, nil
 }
@@ -233,6 +281,8 @@ func splitValueOfSimpleConditionExpression(expression string) (left, right, oper
 func parseSimpleCondition(expression string) (conditions.Condition, error) {
 	if strings.HasPrefix(expression, keywords.VALUE_OF+"(") {
 		return parseValueOfSimpleCondition(expression)
+	} else if strings.HasPrefix(expression, keywords.LENGTH_OF+"(") {
+		return parseLengthOfSimpleCondition(expression)
 	} else if strings.HasPrefix(expression, keywords.EXISTS+"(") {
 		return parseExistsSimpleCondition(expression)
 	} else if strings.HasPrefix(expression, keywords.NOT_EXISTS+"(") {
@@ -243,7 +293,7 @@ func parseSimpleCondition(expression string) (conditions.Condition, error) {
 }
 
 func parseValueOfSimpleCondition(expression string) (conditions.Condition, error) {
-	left, right, operator, err := splitValueOfSimpleConditionExpression(expression)
+	left, right, operator, err := splitRelationalSimpleConditionExpression(expression)
 	if err != nil {
 		return nil, err
 	}
@@ -276,6 +326,50 @@ func parseValueOfSimpleCondition(expression string) (conditions.Condition, error
 		return conditions.New().ValueOf(key).LesserThanOrEqual(value), nil
 	default:
 		return nil, fmt.Errorf("invalid '%s' condition: invalid relational operator: %s", keywords.VALUE_OF, operator)
+	}
+}
+
+func parseLengthOfSimpleCondition(expression string) (conditions.Condition, error) {
+	left, right, operator, err := splitRelationalSimpleConditionExpression(expression)
+	if err != nil {
+		return nil, err
+	}
+
+	if !strings.HasPrefix(left, keywords.LENGTH_OF+"(") {
+		return nil, fmt.Errorf("invalid '%s' condition: must start with '%s': %s", keywords.LENGTH_OF, keywords.LENGTH_OF+"(", expression)
+	}
+	if !strings.HasSuffix(left, ")") {
+		return nil, fmt.Errorf("invalid '%s' condition: must end with ')': %s", keywords.LENGTH_OF, expression)
+	}
+
+	key := strings.TrimSpace(left[len(keywords.LENGTH_OF)+1 : len(left)-1])
+	if !objects.IsValidKey(key) {
+		return nil, fmt.Errorf("invalid '%s' condition: invalid object key: %s", keywords.LENGTH_OF, expression)
+	}
+	right = strings.TrimSpace(right)
+
+	_value, err := strconv.ParseInt(right, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid '%s' condition: invalid value: %s", keywords.LENGTH_OF, expression)
+	}
+
+	value := int(_value)
+
+	switch operator {
+	case keywords.OPERATOR_EQ:
+		return conditions.New().LengthOf(key).EqualTo(value), nil
+	case keywords.OPERATOR_NE:
+		return conditions.New().LengthOf(key).NotEqual(value), nil
+	case keywords.OPERATOR_GT:
+		return conditions.New().LengthOf(key).GreaterThan(value), nil
+	case keywords.OPERATOR_GE:
+		return conditions.New().LengthOf(key).GreaterThanOrEqual(value), nil
+	case keywords.OPERATOR_LT:
+		return conditions.New().LengthOf(key).LesserThan(value), nil
+	case keywords.OPERATOR_LE:
+		return conditions.New().LengthOf(key).LesserThanOrEqual(value), nil
+	default:
+		return nil, fmt.Errorf("invalid '%s' condition: invalid relational operator: %s", keywords.LENGTH_OF, operator)
 	}
 }
 
@@ -343,6 +437,7 @@ func unwrapQuotaIfNeeded(expression string) string {
 }
 
 // TODO support quotation
+// "expression0 || expression1 && expression2" => "expression0", "||", "expression1 && expression2"
 func splitCombinationConditionExpression(expression string) (conditionStr string, operator string, rest string, err error) {
 	expression = strings.TrimSpace(expression)
 	if strings.HasPrefix(expression, "(") {
@@ -404,6 +499,7 @@ func splitCombinationConditionExpression(expression string) (conditionStr string
 }
 
 // TODO support quotation
+// "|| expression1 && expression2" => "||", "expression1 && expression2"
 func splitOperatorAndTail(operatorAndTail string) (string, string, error) {
 	if operatorAndTail == "" {
 		return "", "", nil

@@ -39,7 +39,6 @@ DELETE(status)
 			wantKubeconfig: "/.kube/config",
 			wantScripts: `DELETE(metadata.creationTimestamp)
 DELETE(metadata.resourceVersion)
-# service scripts
 DELETE(metadata.uid)
 DELETE(status)`,
 			wantResources: map[string]match.Matcher{
@@ -88,7 +87,6 @@ DELETE(status)
 			wantKubeconfig: "/.kube/config",
 			wantScripts: `DELETE(metadata.creationTimestamp)
 DELETE(metadata.resourceVersion)
-# service scripts
 DELETE(metadata.uid)
 DELETE(status)`,
 			wantResources: map[string]match.Matcher{

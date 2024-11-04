@@ -222,7 +222,7 @@ func Test_indexInQuota(t *testing.T) {
 	}
 }
 
-func Test_splitValueOfSimpleConditionExpression(t *testing.T) {
+func Test_splitRelationalSimpleConditionExpression(t *testing.T) {
 	tests := []struct {
 		name         string
 		expression   string
@@ -258,19 +258,19 @@ func Test_splitValueOfSimpleConditionExpression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotLeft, gotRight, gotOperator, err := splitValueOfSimpleConditionExpression(tt.expression)
+			gotLeft, gotRight, gotOperator, err := splitRelationalSimpleConditionExpression(tt.expression)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("splitValueOfSimpleConditionExpression() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("splitRelationalSimpleConditionExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotLeft != tt.wantLeft {
-				t.Errorf("splitValueOfSimpleConditionExpression() gotLeft = %v, want %v", gotLeft, tt.wantLeft)
+				t.Errorf("splitRelationalSimpleConditionExpression() gotLeft = %v, want %v", gotLeft, tt.wantLeft)
 			}
 			if gotRight != tt.wantRight {
-				t.Errorf("splitValueOfSimpleConditionExpression() gotRight = %v, want %v", gotRight, tt.wantRight)
+				t.Errorf("splitRelationalSimpleConditionExpression() gotRight = %v, want %v", gotRight, tt.wantRight)
 			}
 			if gotOperator != tt.wantOperator {
-				t.Errorf("splitValueOfSimpleConditionExpression() gotOperator = %v, want %v", gotOperator, tt.wantOperator)
+				t.Errorf("splitRelationalSimpleConditionExpression() gotOperator = %v, want %v", gotOperator, tt.wantOperator)
 			}
 		})
 	}
@@ -400,13 +400,31 @@ func Test_parsePureAction(t *testing.T) {
 		{
 			name:       "TEST3",
 			expression: "SET(a.b.c,   z.yz)",
-			want:       action.NewSetAction("a.b.c", "z.yz"),
+			want:       action.NewSetAction("a.b.c", action.Original("z.yz")),
 			wantErr:    false,
 		},
 		{
 			name:       "TEST4",
-			expression: `SET_WITH_VALUE_OF(a.b.c, "  z.yz")`,
-			want:       action.NewSetWithValueOfAction("a.b.c", "  z.yz"),
+			expression: `SET(a.b.c, VALUE_OF("z.yz"))`,
+			want:       action.NewSetAction("a.b.c", action.ValueOf("z.yz")),
+			wantErr:    false,
+		},
+		{
+			name:       "TEST5",
+			expression: `SET(a.b.c, VALUE_OF("  z.yz"))`,
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "TEST6",
+			expression: `SET(a.b.c, VALUE_OF(  z.yz))`,
+			want:       action.NewSetAction("a.b.c", action.ValueOf("z.yz")),
+			wantErr:    false,
+		},
+		{
+			name:       "TEST7",
+			expression: `SET(a.b.c, VALUE_OF(z.yz))`,
+			want:       action.NewSetAction("a.b.c", action.ValueOf("z.yz")),
 			wantErr:    false,
 		},
 	}
