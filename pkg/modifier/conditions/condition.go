@@ -235,10 +235,6 @@ func (s *valueOfCondition) Calculate(object objects.StructuredObject) (bool, err
 		return false, err
 	}
 
-	if v == nil {
-		return false, nil
-	}
-
 	return calculate(s.operator, v, s.value)
 }
 
@@ -311,8 +307,30 @@ func calculate(operator int, objectValue interface{}, conditionValue interface{}
 		return calculateObjectArray(operator, v_, conditionValue)
 	case map[interface{}]interface{}:
 		return calculateObjectMap(operator, v_, conditionValue)
+	case nil:
+		return calculateNilAndValue(operator, conditionValue)
 	default:
 		return false, fmt.Errorf("calculate error: unsupported type: %v", reflect.TypeOf(objectValue))
+	}
+}
+
+func calculateNilAndValue(operator int, v2 interface{}) (bool, error) {
+	switch operator {
+	case GreaterThan:
+		fallthrough
+	case GreaterThanOrEqual:
+		fallthrough
+	case LesserThan:
+		fallthrough
+	case LesserThanOrEqual:
+		return false, fmt.Errorf("calculateNilAndValue error: can not compare nil and %v ", reflect.TypeOf(v2))
+	case EqualTo:
+		return v2 == nil, nil
+	case NotEqual:
+		return v2 != nil, nil
+	default:
+		// Not possible
+		return false, fmt.Errorf("calculate number error: unsupported operator: %v", operator)
 	}
 }
 
