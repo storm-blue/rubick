@@ -276,7 +276,7 @@ func Test_splitRelationalSimpleConditionExpression(t *testing.T) {
 	}
 }
 
-func Test_splitPureActionExpression(t *testing.T) {
+func Test_splitMethodExpression(t *testing.T) {
 	tests := []struct {
 		name       string
 		expression string
@@ -322,16 +322,16 @@ func Test_splitPureActionExpression(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotMethod, gotArgs, err := splitPureActionExpression(tt.expression)
+			gotMethod, gotArgs, err := splitMethodExpression(tt.expression)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("splitPureActionExpression() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("splitMethodExpression() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotMethod != tt.wantMethod {
-				t.Errorf("splitPureActionExpression() gotMethod = %v, want %v", gotMethod, tt.wantMethod)
+				t.Errorf("splitMethodExpression() gotMethod = %v, want %v", gotMethod, tt.wantMethod)
 			}
 			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
-				t.Errorf("splitPureActionExpression() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
+				t.Errorf("splitMethodExpression() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
 			}
 		})
 	}
@@ -523,7 +523,7 @@ func Test_parseValueOfSimpleCondition(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseValueOfSimpleCondition(tt.expression)
+			got, err := parseRelationalSimpleCondition(tt.expression)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseSimpleCondition() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -594,7 +594,7 @@ func Test_parseExistsSimpleCondition(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseExistsSimpleCondition(tt.expression)
+			got, err := parseSingleWordsSimpleCondition(tt.expression)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseExistsSimpleCondition() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -634,7 +634,7 @@ func Test_parseNotExistsSimpleCondition(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseNotExistsSimpleCondition(tt.expression)
+			got, err := parseSingleWordsSimpleCondition(tt.expression)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parseNotExistsSimpleCondition() error = %v, wantErr %v", err, tt.wantErr)
 				return

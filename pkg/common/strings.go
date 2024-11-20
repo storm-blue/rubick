@@ -126,3 +126,16 @@ func UnwrapAngleBracketsIfNeeded(expression string) string {
 		return expression
 	}
 }
+
+func UnwrapQuotaIfNeeded(expression string) string {
+	expression = strings.TrimSpace(expression)
+	if len(expression) < 2 {
+		return expression
+	}
+	if strings.HasPrefix(expression, "\"") && strings.HasSuffix(expression, "\"") {
+		expression = expression[1 : len(expression)-1]
+		return expression
+	} else {
+		return expression
+	}
+}
