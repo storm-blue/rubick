@@ -103,6 +103,18 @@ IF EXISTS(metadata.labels.app-name) THEN ...
 IF NOT_EXISTS(metadata.labels.app-name) THEN ...
 ```
 
+**HAS_PREFIX**
+
+```
+IF HAS_PREFIX(metadata.labels.app-name, "dev-") THEN ...
+```
+
+**HAS_SUFFIX**
+
+```
+IF HAS_SUFFIX(metadata.labels.app-name, "-app") THEN ...
+```
+
 ### 支持的action方法
 
 **DELETE**
