@@ -5,6 +5,12 @@ rubick是一个处理yaml文件的工具。起因是私有化部署的场景，�
 但是往往直接导出的yaml文件无法直接使用，需要进行一定的清洗工作。最初尝试写代码去清洗，
 但不具备可复用性，于是写了这个工具。
 
+## install
+
+```aiignore
+go install github.com/storm-blue/rubick
+```
+
 ## 工具使用
 
 包含三个子工具：

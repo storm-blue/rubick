@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/storm-blue/rubick/pkg/config"
 	"github.com/storm-blue/rubick/pkg/engine/scripts"
 	"github.com/storm-blue/rubick/pkg/modifier/action"
 	"github.com/storm-blue/rubick/pkg/modifier/objects"
-	"github.com/storm-blue/rubick/tools/config"
-	"github.com/storm-blue/rubick/tools/utils"
+	"github.com/storm-blue/rubick/pkg/utils"
 	"os"
 	"time"
 )
