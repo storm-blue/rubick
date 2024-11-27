@@ -52,6 +52,8 @@ Rubick to export and clean up the corresponding resources.
 		Short: "导出k8s资源",
 		Long:  `将指定的资源从目标k8s集群中导出到当前目录`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("processing...")
+
 			resources, err := utils.GetResources(*kubeconfig, *namespaces, *resource)
 			if err != nil {
 				return err
@@ -67,10 +69,14 @@ Rubick to export and clean up the corresponding resources.
 				outputFileName = fmt.Sprintf("%vs-exported-%v.yaml", *resource, time.Now().Format(TimeFormat))
 			}
 
-			if err := os.WriteFile(outputFileName, []byte(yamls), os.ModePerm); err != nil {
-				return err
+			if len(yamls) == 0 {
+				fmt.Println("no results return after process, skip output results to file!")
+			} else {
+				if err := os.WriteFile(outputFileName, []byte(yamls), os.ModePerm); err != nil {
+					return err
+				}
 			}
-			fmt.Println("processing...")
+
 			fmt.Println("success.")
 			return nil
 		},
@@ -81,6 +87,8 @@ Rubick to export and clean up the corresponding resources.
 		Short: "修改YAML文件",
 		Long:  `通过自定义清洗规则脚本，对指定的YAML文件进行修改`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("processing...")
+
 			yamlBytes, err := os.ReadFile(*yamlFile)
 			if err != nil {
 				return err
@@ -100,10 +108,14 @@ Rubick to export and clean up the corresponding resources.
 				outputFileName = fmt.Sprintf("modified-%v.yaml", time.Now().Format(TimeFormat))
 			}
 
-			if err := os.WriteFile(outputFileName, []byte(yaml), os.ModePerm); err != nil {
-				return err
+			if len(yaml) == 0 {
+				fmt.Println("no results return after process, skip output results to file!")
+			} else {
+				if err := os.WriteFile(outputFileName, []byte(yaml), os.ModePerm); err != nil {
+					return err
+				}
 			}
-			fmt.Println("processing...")
+
 			fmt.Println("success.")
 			return nil
 		},
@@ -143,6 +155,8 @@ IF (VALUE_OF(kind)=="Service" && EXISTS(metadata.labels.(github.io/app))) THEN S
 IF NOT_EXISTS(metadata.labels.(github.io/app)) THEN SET_WITH_VALUE_OF(metadata.labels.(github.io/app), metadata.name)
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("processing...")
+
 			configBytes, err := os.ReadFile(*configFile)
 			if err != nil {
 				return err
@@ -183,10 +197,14 @@ IF NOT_EXISTS(metadata.labels.(github.io/app)) THEN SET_WITH_VALUE_OF(metadata.l
 				return err
 			}
 
-			if err := os.WriteFile(outputFileName, []byte(yaml), os.ModePerm); err != nil {
-				return err
+			if len(yaml) == 0 {
+				fmt.Println("no results return after process, skip output results to file!")
+			} else {
+				if err := os.WriteFile(outputFileName, []byte(yaml), os.ModePerm); err != nil {
+					return err
+				}
 			}
-			fmt.Println("processing...")
+
 			fmt.Println("success.")
 			return nil
 		},
