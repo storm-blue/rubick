@@ -70,7 +70,7 @@ Rubick to export and clean up the corresponding resources.
 			}
 
 			if len(yamls) == 0 {
-				fmt.Println("no results return after process, skip output results to file!")
+				fmt.Println("nothing return after process, skip output results to file!")
 			} else {
 				if err := os.WriteFile(outputFileName, []byte(yamls), os.ModePerm); err != nil {
 					return err
@@ -109,7 +109,7 @@ Rubick to export and clean up the corresponding resources.
 			}
 
 			if len(yaml) == 0 {
-				fmt.Println("no results return after process, skip output results to file!")
+				fmt.Println("nothing return after process, skip output results to file!")
 			} else {
 				if err := os.WriteFile(outputFileName, []byte(yaml), os.ModePerm); err != nil {
 					return err
@@ -198,7 +198,7 @@ IF NOT_EXISTS(metadata.labels.(github.io/app)) THEN SET_WITH_VALUE_OF(metadata.l
 			}
 
 			if len(yaml) == 0 {
-				fmt.Println("no results return after process, skip output results to file!")
+				fmt.Println("nothing return after process, skip output results to file!")
 			} else {
 				if err := os.WriteFile(outputFileName, []byte(yaml), os.ModePerm); err != nil {
 					return err
