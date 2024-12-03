@@ -99,7 +99,7 @@ func (s *printAction) DoAction(context Context, object objects.StructuredObject)
 	if v, err := object.Get(s.key); err != nil {
 		context.Log(object, s, err)
 	} else {
-		fmt.Printf("%v: %v\n", s.key, v)
+		fmt.Printf("%v\n", v)
 	}
 }
 
