@@ -700,6 +700,17 @@ func getElement(slice []interface{}, index YamlIndex) (interface{}, error) {
 		return nil, fmt.Errorf("get elements by index error: unsupported index type: %v", index.indexType)
 	case IndexLoop:
 		return slice, nil
+	case IndexSearch:
+		for _, e := range slice {
+			e_, ok := e.(map[interface{}]interface{})
+			if !ok {
+				return nil, fmt.Errorf("get element error: %v, index: %v", slice, index)
+			}
+			if lenientEqual(e_[index.key], index.value) {
+				return e, nil
+			}
+		}
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("get elements by index error: unkown index type: %v", index.indexType)
 	}
@@ -741,16 +752,17 @@ func getElementForDelete(slice []interface{}, index YamlIndex) ([]interface{}, e
 	case IndexAppend:
 		return nil, fmt.Errorf("get elements by index for delete error: unsupported index type: %v", index.indexType)
 	case IndexSearch:
+		var result []interface{}
 		for _, e := range slice {
 			e_, ok := e.(map[interface{}]interface{})
 			if !ok {
 				return nil, fmt.Errorf("delete elements by index error: %v, index: %v", slice, index)
 			}
 			if lenientEqual(e_[index.key], index.value) {
-				return []interface{}{e}, nil
+				result = append(result, e)
 			}
 		}
-		return nil, nil
+		return result, nil
 	case IndexLoop:
 		return slice, nil
 	default:
