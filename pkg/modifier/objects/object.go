@@ -18,11 +18,17 @@ func NewObject() StructuredObject {
 }
 
 func FromJSON(jsonStr string) (StructuredObject, error) {
-	result := map[interface{}]interface{}{}
-	if err := json.Unmarshal([]byte(jsonStr), &result); err != nil {
+	temp := map[string]interface{}{}
+	if err := json.Unmarshal([]byte(jsonStr), &temp); err != nil {
 		return nil, err
 	}
-	return FromMap(result), nil
+
+	yamlBytes, err := yaml.Marshal(temp)
+	if err != nil {
+		return nil, err
+	}
+
+	return FromYAML(string(yamlBytes))
 }
 
 func FromYAML(yamlStr string) (StructuredObject, error) {
