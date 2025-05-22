@@ -192,9 +192,13 @@ IF NOT_EXISTS(metadata.labels.(github.io/app)) THEN SET_WITH_VALUE_OF(metadata.l
 				return err
 			}
 
-			yaml, err := objects.ToYAMLs(__objects)
-			if err != nil {
-				return err
+			yaml := ""
+
+			if len(__objects) != 0 {
+				yaml, err = objects.ToYAMLs(__objects)
+				if err != nil {
+					return err
+				}
 			}
 
 			if len(yaml) == 0 {
